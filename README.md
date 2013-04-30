@@ -4,9 +4,7 @@ fluxbb
 FluxBB is an open source addon that integrates FluxCP into FluxBB forum engine by http://fluxbb.org
 
 Unlike many forum softwares, FluxBB is designed to be smaller and lighter without many of the less essential features. Often features which aren't included in the core are implemented by the community and released as modifications. The below feature list shows what features are included in a standard install of FluxBB.
-   FluxBB v1.2	FluxBB v1.4	FluxBB v1.5
-License	GPLv2	GPLv2	GPLv2
-Programming language	PHP	PHP	PHP
+
 UTF-8 support			
 XHTML compliant			
 Password hashing			
