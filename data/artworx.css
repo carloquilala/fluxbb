@@ -1,0 +1,99 @@
+.pun {
+	padding: 0 0 20px 0;
+	margin: 0;
+	font: 100% Arial, Helvetica, sans-serif;
+}
+#puninstall, #pundb_update {
+	padding: 0;
+}
+#punredirect, #punmaint {
+	padding: 60px 20% 60px 20%;
+	margin: 20px;
+}
+#punindex #brdmain .blocktable h2, #punsearch #vf h2 {
+	font: 100% Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	margin: 1px 1px 0 1px;
+	padding-left: 8px;
+	position: absolute;
+	left: 0;
+	white-space: nowrap;
+	z-index: 100;
+	letter-spacing: 0;
+}
+#punindex .box.blocktable {
+	border: 1px solid; 
+	border-color: #b9c5ce #d9e1e7;
+}
+.pun .block {
+	height: auto;
+	width: auto;
+}
+.pun.pun_extra {
+	
+}
+.pun  h2 {
+	font: 1.462em/1em "Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+#punindex .linksb {
+	height: auto;
+}
+
+.codebox_flux h3.code, #punindex pre {
+	cursor:pointer;
+}
+
+.codebox_flux h3 {
+	text-transform: none;
+}
+
+.codebox_flux h3.code {
+	color:#ffffff;
+	font:bold 1em "Lucida Grande", "Lucida Sans", Verdana, Tahoma, sans-serif;
+	text-align:left;
+	margin:1em 0 0 0;
+	padding:3px;
+	border:1px dotted #fff;
+	border-bottom-width:0;
+	background:#44699c;
+	text-shadow: #708fae 1pt 1pt;
+	max-width: 618px;
+}
+
+.codebox_flux pre {
+	font:1em/1.2em "Lucida Grande", "Lucida Sans", Verdana, Tahoma, sans-serif;
+	color:#FFFF93;
+	background:#333;
+	border:1px dotted #fff;
+	padding:1em;
+	margin:0 0 1em 0;
+	overflow:auto;
+	max-width: 600px;
+	max-height: 150px;
+}
+
+.codebox_flux .code_select_all {
+	font-size: 80%;
+	color: #ffffff;
+	float: right;
+	margin: 2px 2px 0 0;
+}
+.codebox_flux .code_select_all:hover {
+	color:#FFFF93;
+}
+
+.codebox_flux ol {
+	list-style: decimal;
+	margin-left: 10px;
+}
+
+ol.default {
+	list-style: decimal;
+	margin: 0 0 10px 30px;
+}
+ol.default li {
+	list-style: decimal;
+	padding: 0 0 2px 5px;
+}
+
+xmp { margin: 0; padding: 0; }
