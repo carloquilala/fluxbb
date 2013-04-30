@@ -32,9 +32,21 @@ return array(
 	
 	'modules' => array(
 		'fluxbb' => array(
-            'index' 		=> AccountLevel::ANYONE,
-            'install' 		=> AccountLevel::ADMIN,
-            // 'viewtopic' 	=> AccountLevel::NORMAL,
+            'admin_bans' 			=> AccountLevel::ADMIN,
+            'admin_categories'		=> AccountLevel::ADMIN,
+            'admin_censoring'		=> AccountLevel::ADMIN,
+            'admin_forums'			=> AccountLevel::ADMIN,
+            'admin_groups'			=> AccountLevel::ADMIN,
+            'admin_index'			=> AccountLevel::ADMIN,
+            'admin_loader'			=> AccountLevel::ADMIN,
+            'admin_maintenance'		=> AccountLevel::ADMIN,
+            'admin_options'			=> AccountLevel::ADMIN,
+            'admin_permissions'		=> AccountLevel::ADMIN,
+            'admin_reports'			=> AccountLevel::ADMIN,
+            'admin_statistics'		=> AccountLevel::ADMIN,
+            'admin_users'			=> AccountLevel::ADMIN,
+            'index' 				=> AccountLevel::ANYONE,
+            'install' 				=> AccountLevel::ADMIN,
 		),
 	),
 )
