@@ -18,10 +18,9 @@ For more features and what is supports in detail, you may found it at http://flu
 
 **Uploading, Installation, and Configuration**
   - Upload downloaded FluxBB version 1.5.3 (zip) in ``<%FLUXCP_DIR%>/`` folder (Do not install yet)
-  - Create a new folder in ``<%FLUXCP_DIR%>/addons/`` directory and upload/extract the downloaded FluxBB Addon files, or if you are using a svn, create a fluxbb folder in your FluxCP addons folder and checkout the latest build in this link https://github.com/jupeto/fluxbb.git
+  - Open **FluxCP_Root/addons** and create a new folder and name it as **fluxbb** then upload/extract the downloaded FluxBB Addon files, or if you are using a svn, checkout the latest build in this link https://github.com/jupeto/fluxbb/trunk/
   - Create a database and name it as fluxbb
   - Access the install path of FluxCP Addon via http://domain.com/fluxcp_folder/index.php?module=fluxbb&action=install or http://domain.com/index.php?module=fluxbb&action=install
-
   - Fill in all required fields and submit the form to install it
   - You must specify a valid admin username to be an administrator
   - During the installation, all FluxCP accounts will be inserted in FluxBB account table
