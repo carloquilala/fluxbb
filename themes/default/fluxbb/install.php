@@ -132,10 +132,10 @@ if (!isset($_POST['form_sent']))
 	// Make an educated guess regarding base_url
 	$base_url  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https://' : 'http://';	// protocol
 	$base_url .= preg_replace('%:(80|443)$%', '', $_SERVER['HTTP_HOST']);							// host[:port]
-	$base_url .= str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])).'/?module=fluxbb';							// path
+	$base_url .= str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])).'?module=fluxbb';			// path
 
 	if (substr($base_url, -1) == '/')
-		$base_url = substr($base_url, 0, -1).'/?module=fluxbb';
+		$base_url = substr($base_url, 0, -1).'?module=fluxbb';
 
 	$db_type = $db_name = $db_username = $db_prefix = $username = $email = '';
 	$username = $session->account->userid;
@@ -1561,9 +1561,8 @@ else
 		}
 	}
 
-	$sql  = "UPDATE ".$db_name.".".$db->prefix."users SET";
-	$sql .= " `group_id` = 1 WHERE `username` = ?";
-	$sth  = $server->connection->getStatement($sql);
+	$db->query('UPDATE '.$db_name.'.'.$db_prefix.'users SET group_id = 1 WHERE username = \''.$db->escape($username).'\'')
+		or error('Unable to set administrator\'s group id', __FILE__, __LINE__, $db->error());
 
 	$sth->execute(array($username));
 	
