@@ -33,3 +33,14 @@ If you need further support in installing the addon, please feel free to post yo
 ## Integrating FluxCP and FluxBB account sessions
 
 You may find the step by step procedure on how to integrate FluxBB with FluxCP at http://artworx.juplo.com/?module=fluxbb&action=howto
+
+## Copyright License
+
+License of this addon will always be the same as FluxBB's license
+
+    FluxBB is released under The GNU General Public License version 2 or higher.
+    In short terms this means that FluxBB is free to download, use, distribute, modify and even charge for.
+    However, if any of these modifications are released to the public, that code must also be released
+    under the same license as FluxBB.
+
+Source: http://fluxbb.org/docs/faq#what-copyright-license-does-fluxbb-use
