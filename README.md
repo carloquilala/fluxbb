@@ -10,7 +10,7 @@ For more features and what is supports in detail, you may found it at http://flu
 
 **Essential Files**
   * FluxCP - https://github.com/missxantara/fluxcp-ra/trunk/
-  * FluxBB Addon - https://github.com/jupeto/fluxbb.git
+  * FluxBB Addon - https://github.com/jupeto/fluxbb.git or SVN Checkout https://github.com/jupeto/fluxbb/trunk
   * FluxBB version 1.5.3 (zip) - http://fluxbb.org/downloads/
 
 **Minimum Requirement - FluxBB version 1.5.3 (zip)**
