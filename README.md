@@ -6,6 +6,28 @@ Unlike many forum softwares, FluxBB is designed to be smaller and lighter withou
 
 For more features and what is supports in detail, you may found it at http://fluxbb.org/about/features.html
 
+## How to install
+
+**Essential Files**
+  * FluxCP - https://github.com/missxantara/fluxcp-ra/trunk/
+  * FluxBB Addon - https://github.com/jupeto/fluxbb.git
+  * FluxBB version 1.5.3 (zip) - http://fluxbb.org/downloads/
+
+**Minimum Requirement - FluxBB version 1.5.3 (zip)**
+  * To install and run FluxBB v1.5.3 you must have access to a webserver. FluxBB v1.5.3 requires PHP 4.4.0 or later. A database is required which may be MySQL 4.1.2 or later, PostgreSQL 7.0 or later or SQLite 2.
+
+**Uploading, Installation, and Configuration**
+  - Upload downloaded FluxBB version 1.5.3 (zip) in ``<%FLUXCP_DIR%>/`` folder (Do not install yet)
+  - Upload downloaded FluxBB Addon in ``<%FLUXCP_DIR%>/addons/`` folder
+  - Create a database and name it as fluxbb
+  - Access the install path of FluxCP Addon via http://domain.com/fluxcp_folder/index.php?module=fluxbb&action=install or http://domain.com/index.php?module=fluxbb&action=install
+
+  - Fill in all required fields and submit the form to install it
+  - You must specify a valid admin username to be an administrator
+  - During the installation, all FluxCP accounts will be inserted in FluxBB account table
+  - If you want to integrate both FluxCP and FluxBB account sessions, see http://artworx.juplo.com/?module=fluxbb&action=howto before logging in
+  - After successfull installation, re-login using your admin account. Have fun using FluxBB Forum
+  
 ## Integrating FluxCP and FluxBB account sessions
 
 You may find the step by step procedure on how to integrate FluxBB with FluxCP at http://artworx.juplo.com/?module=fluxbb&action=howto
