@@ -18,7 +18,7 @@ For more features and what is supports in detail, you may found it at http://flu
 
 **Uploading, Installation, and Configuration**
   - Upload downloaded FluxBB version 1.5.3 (zip) in ``<%FLUXCP_DIR%>/`` folder (Do not install yet)
-  - Upload downloaded FluxBB Addon in ``<%FLUXCP_DIR%>/addons/`` folder
+  - Create a new folder in ``<%FLUXCP_DIR%>/addons/`` directory and upload/extract the downloaded FluxBB Addon files, or if you are using a svn, create a fluxbb folder in your FluxCP addons folder and checkout the latest build in this link https://github.com/jupeto/fluxbb.git
   - Create a database and name it as fluxbb
   - Access the install path of FluxCP Addon via http://domain.com/fluxcp_folder/index.php?module=fluxbb&action=install or http://domain.com/index.php?module=fluxbb&action=install
 
@@ -27,6 +27,8 @@ For more features and what is supports in detail, you may found it at http://flu
   - During the installation, all FluxCP accounts will be inserted in FluxBB account table
   - If you want to integrate both FluxCP and FluxBB account sessions, see http://artworx.juplo.com/?module=fluxbb&action=howto before logging in
   - After successfull installation, re-login using your admin account. Have fun using FluxBB Forum
+
+If you need further support in installing the addon, please feel free to post your questions in http://artworx.juplo.com/?module=fluxbb
   
 ## Integrating FluxCP and FluxBB account sessions
 
