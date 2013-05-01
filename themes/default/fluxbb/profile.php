@@ -12,13 +12,13 @@ require PUN_ROOT.'include/utf8/substr_replace.php';
 require PUN_ROOT.'include/utf8/ucwords.php'; // utf8_ucwords needs utf8_substr_replace
 require PUN_ROOT.'include/utf8/strcasecmp.php';
 
-$action = isset($_GET['act']) ? $_GET['act'] : null;
-$section = isset($_GET['section']) ? $_GET['section'] : null;
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$action = $params->get('act') ? $params->get('act') : null;
+$section = $params->get('section') ? $params->get('section') : null;
+$id = $params->get('id') ? intval($params->get('id')) : 0;
 if ($id < 2)
 	message($lang_common['Bad request'], false, '404 Not Found');
 
-if ($action != 'change_pass' || !isset($_GET['key']))
+if ($action != 'change_pass' || !$params->get('key'))
 {
 	if ($pun_user['g_read_board'] == '0')
 		message($lang_common['No view'], false, '403 Forbidden');
@@ -40,7 +40,7 @@ if ($action == 'upload_avatar' || $action == 'upload_avatar2')
 	if ($pun_user['id'] != $id && !$pun_user['is_admmod'])
 		message($lang_common['No permission'], false, '403 Forbidden');
 
-	if (isset($_POST['form_sent']))
+	if ($params->get('form_sent'))
 	{
 		if (!isset($_FILES['req_file']))
 			message($lang_profile['No file']);
@@ -171,14 +171,14 @@ else if ($action == 'delete_avatar')
 }
 
 
-else if (isset($_POST['update_group_membership']))
+else if ($params->get('update_group_membership'))
 {
 	if ($pun_user['g_id'] > PUN_ADMIN)
 		message($lang_common['No permission'], false, '403 Forbidden');
 
 	confirm_referrer('?module=fluxbb&action=profile');
 
-	$new_group_id = intval($_POST['group_id']);
+	$new_group_id = intval($params->get('group_id'));
 
 	$db->query('UPDATE '.$db->prefix.'users SET group_id='.$new_group_id.' WHERE id='.$id) or error('Unable to change user group', __FILE__, __LINE__, $db->error());
 
@@ -215,7 +215,7 @@ else if (isset($_POST['update_group_membership']))
 }
 
 
-else if (isset($_POST['update_forums']))
+else if ($params->get('update_forums'))
 {
 	if ($pun_user['g_id'] > PUN_ADMIN)
 		message($lang_common['No permission'], false, '403 Forbidden');
@@ -226,7 +226,7 @@ else if (isset($_POST['update_forums']))
 	$result = $db->query('SELECT username FROM '.$db->prefix.'users WHERE id='.$id) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 	$username = $db->result($result);
 
-	$moderator_in = (isset($_POST['moderator_in'])) ? array_keys($_POST['moderator_in']) : array();
+	$moderator_in = ($_POST['moderator_in']) ? array_keys($_POST['moderator_in']) : array();
 
 	// Loop through all forums
 	$result = $db->query('SELECT id, moderators FROM '.$db->prefix.'forums') or error('Unable to fetch forum list', __FILE__, __LINE__, $db->error());
@@ -256,7 +256,7 @@ else if (isset($_POST['update_forums']))
 }
 
 
-else if (isset($_POST['ban']))
+else if ($params->get('ban'))
 {
 	if ($pun_user['g_id'] != PUN_ADMIN && ($pun_user['g_moderator'] != '1' || $pun_user['g_mod_ban_users'] == '0'))
 		message($lang_common['No permission'], false, '403 Forbidden');
@@ -277,7 +277,7 @@ else if (isset($_POST['ban']))
 }
 
 
-else if (isset($_POST['delete_user']) || isset($_POST['delete_user_comply']))
+else if ($params->get('delete_user') || $params->get('delete_user_comply'))
 {
 	if ($pun_user['g_id'] > PUN_ADMIN)
 		message($lang_common['No permission'], false, '403 Forbidden');
@@ -291,7 +291,7 @@ else if (isset($_POST['delete_user']) || isset($_POST['delete_user_comply']))
 	if ($group_id == PUN_ADMIN)
 		message($lang_profile['No delete admin message']);
 
-	if (isset($_POST['delete_user_comply']))
+	if ($params->get('delete_user_comply'))
 	{
 		// If the user is a moderator or an administrator, we remove him/her from the moderator list in all forums as well
 		$result = $db->query('SELECT g_moderator FROM '.$db->prefix.'groups WHERE g_id='.$group_id) or error('Unable to fetch group', __FILE__, __LINE__, $db->error());
@@ -323,7 +323,7 @@ else if (isset($_POST['delete_user']) || isset($_POST['delete_user_comply']))
 		$db->query('DELETE FROM '.$db->prefix.'online WHERE user_id='.$id) or error('Unable to remove user from online list', __FILE__, __LINE__, $db->error());
 
 		// Should we delete all posts made by this user?
-		if (isset($_POST['delete_posts']))
+		if ($params->get('delete_posts'))
 		{
 			require PUN_ROOT.'include/search_idx.php';
 			@set_time_limit(0);
@@ -396,7 +396,7 @@ else if (isset($_POST['delete_user']) || isset($_POST['delete_user_comply']))
 }
 
 
-else if (isset($_POST['form_sent']))
+else if ($params->get('form_sent'))
 {
 	// Fetch the user group of the user we are editing
 	$result = $db->query('SELECT u.username, u.group_id, g.g_moderator FROM '.$db->prefix.'users AS u LEFT JOIN '.$db->prefix.'groups AS g ON (g.g_id=u.group_id) WHERE u.id='.$id) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
@@ -964,7 +964,7 @@ else
 		// $required_fields = array('req_username' => $lang_common['Username'], 'req_email' => $lang_common['Email']);
 		define('PUN_ACTIVE_PAGE', 'profile');
 		require 'addons/fluxbb/themes/'.Flux::config('ThemeName').'/fluxbb/header.php';
-		$page = $_GET['section'];
+		$page = $params->get('section');
 
 ?>
 <div id="profile" class="block2col">
@@ -1157,7 +1157,7 @@ else
 		$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['Profile'], $lang_profile['Section personal']);
 		define('PUN_ACTIVE_PAGE', 'profile');
 		require 'addons/fluxbb/themes/'.Flux::config('ThemeName').'/fluxbb/header.php';
-		$page = $_GET['section'];
+		$page = $params->get('section');
 
 ?>
 <div id="profile" class="block2col">
@@ -1210,7 +1210,7 @@ else
 		$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['Profile'], $lang_profile['Section messaging']);
 		define('PUN_ACTIVE_PAGE', 'profile');
 		require 'addons/fluxbb/themes/'.Flux::config('ThemeName').'/fluxbb/header.php';
-		$page = $_GET['section'];
+		$page = $params->get('section');
 
 ?>
 <div id="profile" class="block2col">
@@ -1278,7 +1278,7 @@ else
 		$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['Profile'], $lang_profile['Section personality']);
 		define('PUN_ACTIVE_PAGE', 'profile');
 		require 'addons/fluxbb/themes/'.Flux::config('ThemeName').'/fluxbb/header.php';
-		$page = $_GET['section'];
+		$page = $params->get('section');
 
 ?>
 <div id="profile" class="block2col">
@@ -1348,7 +1348,7 @@ else
 		$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['Profile'], $lang_profile['Section display']);
 		define('PUN_ACTIVE_PAGE', 'profile');
 		require 'addons/fluxbb/themes/'.Flux::config('ThemeName').'/fluxbb/header.php';
-		$page = $_GET['section'];
+		$page = $params->get('section');
 
 ?>
 <div id="profile" class="block2col">
@@ -1454,7 +1454,7 @@ else
 		$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['Profile'], $lang_profile['Section privacy']);
 		define('PUN_ACTIVE_PAGE', 'profile');
 		require 'addons/fluxbb/themes/'.Flux::config('ThemeName').'/fluxbb/header.php';
-		$page = $_GET['section'];
+		$page = $params->get('section');
 
 ?>
 <div id="profile" class="block2col">
@@ -1522,7 +1522,7 @@ else
 		$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['Profile'], $lang_profile['Section admin']);
 		define('PUN_ACTIVE_PAGE', 'profile');
 		require 'addons/fluxbb/themes/'.Flux::config('ThemeName').'/fluxbb/header.php';
-		$page = $_GET['section'];
+		$page = $params->get('section');
 
 ?>
 <div id="profile" class="block2col">

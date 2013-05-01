@@ -11,8 +11,8 @@ if ($pun_user['g_read_board'] == '0')
 	message($lang_common['No view'], false, '403 Forbidden');
 
 
-$tid = isset($_GET['tid']) ? intval($_GET['tid']) : 0;
-$fid = isset($_GET['fid']) ? intval($_GET['fid']) : 0;
+$tid = $params->get('tid') ? intval($params->get('tid')) : 0;
+$fid = $params->get('fid') ? intval($params->get('fid')) : 0;
 if ($tid < 1 && $fid < 1 || $tid > 0 && $fid > 0)
 	message($lang_common['Bad request'], false, '404 Not Found');
 
@@ -54,16 +54,16 @@ $errors = array();
 
 
 // Did someone just hit "Submit" or "Preview"?
-if (isset($_POST['form_sent']))
+if ($params->get('form_sent'))
 {
 	// Flood protection
-	if (!isset($_POST['preview']) && $pun_user['last_post'] != '' && (time() - $pun_user['last_post']) < $pun_user['g_post_flood'])
+	if (!$params->get('preview') && $pun_user['last_post'] != '' && (time() - $pun_user['last_post']) < $pun_user['g_post_flood'])
 		$errors[] = sprintf($lang_post['Flood start'], $pun_user['g_post_flood'], $pun_user['g_post_flood'] - (time() - $pun_user['last_post']));
 
 	// If it's a new topic
 	if ($fid)
 	{
-		$subject = pun_trim($_POST['req_subject']);
+		$subject = pun_trim($params->get('req_subject'));
 
 		if ($pun_config['o_censoring'] == '1')
 			$censored_subject = pun_trim(censor_words($subject));
@@ -87,8 +87,8 @@ if (isset($_POST['form_sent']))
 	// Otherwise it should be in $_POST
 	else
 	{
-		$username = pun_trim($_POST['req_username']);
-		$email = strtolower(pun_trim(($pun_config['p_force_guest_email'] == '1') ? $_POST['req_email'] : $_POST['email']));
+		$username = pun_trim($params->get('req_username'));
+		$email = strtolower(pun_trim(($pun_config['p_force_guest_email'] == '1') ? $params->get('req_email') : $params->get('email')));
 		$banned_email = false;
 
 		// Load the register.php/prof_reg.php language files
@@ -117,7 +117,7 @@ if (isset($_POST['form_sent']))
 	}
 
 	// Clean up message from POST
-	$orig_message = $message = pun_linebreaks(pun_trim($_POST['req_message']));
+	$orig_message = $message = pun_linebreaks(pun_trim($params->get('req_message')));
 
 	// Here we use strlen() not pun_strlen() as we want to limit the post to PUN_MAX_POSTSIZE bytes, not characters
 	if (strlen($message) > PUN_MAX_POSTSIZE)
@@ -148,9 +148,9 @@ if (isset($_POST['form_sent']))
 		}
 	}
 
-	$hide_smilies = isset($_POST['hide_smilies']) ? '1' : '0';
-	$subscribe = isset($_POST['subscribe']) ? '1' : '0';
-	$stick_topic = isset($_POST['stick_topic']) && $is_admmod ? '1' : '0';
+	$hide_smilies = $params->get('hide_smilies') ? '1' : '0';
+	$subscribe = $params->get('subscribe') ? '1' : '0';
+	$stick_topic = $params->get('stick_topic') && $is_admmod ? '1' : '0';
 
 	// Replace four-byte characters (MySQL cannot handle them)
 	$message = strip_bad_multibyte_chars($message);
@@ -158,7 +158,7 @@ if (isset($_POST['form_sent']))
 	$now = time();
 
 	// Did everything go according to plan?
-	if (empty($errors) && !isset($_POST['preview']))
+	if (empty($errors) && !$params->get('preview'))
 	{
 		require PUN_ROOT.'include/search_idx.php';
 
@@ -442,9 +442,9 @@ if ($tid)
 	$form = '<form id="post" method="post" action="?module=fluxbb&action=post&act=post&amp;tid='.$tid.'" onsubmit="this.submit.disabled=true;if(process_form(this)){return true;}else{this.submit.disabled=false;return false;}">';
 
 	// If a quote ID was specified in the url
-	if (isset($_GET['qid']))
+	if ($params->get('qid'))
 	{
-		$qid = intval($_GET['qid']);
+		$qid = intval($params->get('qid'));
 		if ($qid < 1)
 			message($lang_common['Bad request'], false, '404 Not Found');
 
@@ -578,7 +578,7 @@ if (!empty($errors))
 <?php
 
 }
-else if (isset($_POST['preview']))
+else if ($params->get('preview'))
 {
 	require_once 'addons/fluxbb/data/fluxbb/parser.php';
 	$GLOBALS['smilies'] = $smilies;
@@ -626,17 +626,17 @@ if ($pun_user['is_guest'])
 	$email_form_name = ($pun_config['p_force_guest_email'] == '1') ? 'req_email' : 'email';
 
 ?>
-						<label class="conl required"><strong><?php echo $lang_post['Guest name'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br /><input type="text" name="req_username" value="<?php if (isset($_POST['req_username'])) echo pun_htmlspecialchars($username); ?>" size="25" maxlength="25" tabindex="<?php echo $cur_index++ ?>" /><br /></label>
-						<label class="conl<?php echo ($pun_config['p_force_guest_email'] == '1') ? ' required' : '' ?>"><?php echo $email_label ?><br /><input type="text" name="<?php echo $email_form_name ?>" value="<?php if (isset($_POST[$email_form_name])) echo pun_htmlspecialchars($email); ?>" size="50" maxlength="80" tabindex="<?php echo $cur_index++ ?>" /><br /></label>
+						<label class="conl required"><strong><?php echo $lang_post['Guest name'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br /><input type="text" name="req_username" value="<?php if ($params->get('req_username')) echo pun_htmlspecialchars($username); ?>" size="25" maxlength="25" tabindex="<?php echo $cur_index++ ?>" /><br /></label>
+						<label class="conl<?php echo ($pun_config['p_force_guest_email'] == '1') ? ' required' : '' ?>"><?php echo $email_label ?><br /><input type="text" name="<?php echo $email_form_name ?>" value="<?php if ($params->get($email_form_name)) echo pun_htmlspecialchars($email); ?>" size="50" maxlength="80" tabindex="<?php echo $cur_index++ ?>" /><br /></label>
 						<div class="clearer"></div>
 <?php
 
 }
 
 if ($fid): ?>
-						<label class="required"><strong><?php echo $lang_common['Subject'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br /><input class="longinput" type="text" name="req_subject" value="<?php if (isset($_POST['req_subject'])) echo pun_htmlspecialchars($subject); ?>" size="80" maxlength="70" tabindex="<?php echo $cur_index++ ?>" /><br /></label>
+						<label class="required"><strong><?php echo $lang_common['Subject'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br /><input class="longinput" type="text" name="req_subject" value="<?php if ($params->get('req_subject')) echo pun_htmlspecialchars($subject); ?>" size="80" maxlength="70" tabindex="<?php echo $cur_index++ ?>" /><br /></label>
 <?php endif; ?>						<label class="required"><strong><?php echo $lang_common['Message'] ?> <span><?php echo $lang_common['Required'] ?></span></strong><br />
-						<textarea name="req_message" rows="20" cols="95" tabindex="<?php echo $cur_index++ ?>"><?php echo isset($_POST['req_message']) ? pun_htmlspecialchars($orig_message) : (isset($quote) ? $quote : ''); ?></textarea><br /></label>
+						<textarea name="req_message" rows="20" cols="95" tabindex="<?php echo $cur_index++ ?>"><?php echo $params->get('req_message') ? pun_htmlspecialchars($orig_message) : (isset($quote) ? $quote : ''); ?></textarea><br /></label>
 						<ul class="bblinks">
 							<li><span><a href="?module=fluxbb&action=help#bbcode" onclick="window.open(this.href); return false;"><?php echo $lang_common['BBCode'] ?></a> <?php echo ($pun_config['p_message_bbcode'] == '1') ? $lang_common['on'] : $lang_common['off']; ?></span></li>
 							<li><span><a href="?module=fluxbb&action=help#url" onclick="window.open(this.href); return false;"><?php echo $lang_common['url tag'] ?></a> <?php echo ($pun_config['p_message_bbcode'] == '1' && $pun_user['g_post_links'] == '1') ? $lang_common['on'] : $lang_common['off']; ?></span></li>
@@ -649,20 +649,20 @@ if ($fid): ?>
 
 $checkboxes = array();
 if ($fid && $is_admmod)
-	$checkboxes[] = '<label><input type="checkbox" name="stick_topic" value="1" tabindex="'.($cur_index++).'"'.(isset($_POST['stick_topic']) ? ' checked="checked"' : '').' />'.$lang_common['Stick topic'].'<br /></label>';
+	$checkboxes[] = '<label><input type="checkbox" name="stick_topic" value="1" tabindex="'.($cur_index++).'"'.($params->get('stick_topic') ? ' checked="checked"' : '').' />'.$lang_common['Stick topic'].'<br /></label>';
 
 if (!$pun_user['is_guest'])
 {
 	if ($pun_config['o_smilies'] == '1')
-		$checkboxes[] = '<label><input type="checkbox" name="hide_smilies" value="1" tabindex="'.($cur_index++).'"'.(isset($_POST['hide_smilies']) ? ' checked="checked"' : '').' />'.$lang_post['Hide smilies'].'<br /></label>';
+		$checkboxes[] = '<label><input type="checkbox" name="hide_smilies" value="1" tabindex="'.($cur_index++).'"'.($params->get('hide_smilies') ? ' checked="checked"' : '').' />'.$lang_post['Hide smilies'].'<br /></label>';
 
 	if ($pun_config['o_topic_subscriptions'] == '1')
 	{
 		$subscr_checked = false;
 
 		// If it's a preview
-		if (isset($_POST['preview']))
-			$subscr_checked = isset($_POST['subscribe']) ? true : false;
+		if ($params->get('preview'))
+			$subscr_checked = $params->get('subscribe') ? true : false;
 		// If auto subscribed
 		else if ($pun_user['auto_notify'])
 			$subscr_checked = true;
@@ -674,7 +674,7 @@ if (!$pun_user['is_guest'])
 	}
 }
 else if ($pun_config['o_smilies'] == '1')
-	$checkboxes[] = '<label><input type="checkbox" name="hide_smilies" value="1" tabindex="'.($cur_index++).'"'.(isset($_POST['hide_smilies']) ? ' checked="checked"' : '').' />'.$lang_post['Hide smilies'].'<br /></label>';
+	$checkboxes[] = '<label><input type="checkbox" name="hide_smilies" value="1" tabindex="'.($cur_index++).'"'.($params->get('hide_smilies') ? ' checked="checked"' : '').' />'.$lang_post['Hide smilies'].'<br /></label>';
 
 if (!empty($checkboxes))
 {

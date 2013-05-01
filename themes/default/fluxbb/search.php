@@ -20,15 +20,12 @@ else if ($pun_user['g_search'] == '0')
 require PUN_ROOT.'include/search_idx.php';
 
 // Figure out what to do :-)
-if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) || isset($_GET['search_id']))
+if ($params->get('act') || $params->get('search_id'))
 {
-	if( isset($_POST['act']) )
-		$action = (isset($_POST['act'])) ? $_POST['act'] : null;
-	else
-		$action = (isset($_GET['act'])) ? $_GET['act'] : null;
+	$action = ($params->get('act')) ? $params->get('act') : null;
 		
-	$forums = isset($_POST['forums']) ? (is_array($_POST['forums']) ? $_POST['forums'] : array_filter(explode(',', $_POST['forums']))) : (isset($_POST['forum']) ? array($_POST['forum']) : array());
-	$sort_dir = (isset($_POST['sort_dir']) && $_POST['sort_dir'] == 'DESC') ? 'DESC' : 'ASC';
+	$forums = ($params->get('forums')) ? (is_array($params->get('forums')) ? $params->get('forums') : array_filter(explode(',', $params->get('forums')))) : ($params->get('forums') ? array($params->get('forums')) : array());
+	$sort_dir = ($params->get('sort_dir') && $params->get('sort_dir') == 'DESC') ? 'DESC' : 'ASC';
 
 	$forums = array_map('intval', $forums);
 
@@ -39,17 +36,17 @@ if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) ||
 		$action = 'show_recent';
 
 	// If a search_id was supplied
-	if (isset($_GET['search_id']))
+	if ($params->get('search_id'))
 	{
-		$search_id = intval($_GET['search_id']);
+		$search_id = intval($params->get('search_id'));
 		if ($search_id < 1)
 			message($lang_common['Bad request'], false, '404 Not Found');
 	}
 	// If it's a regular search (keywords and/or author)
 	else if ($action == 'search')
 	{
-		$keywords = (isset($_POST['keywords'])) ? utf8_strtolower(pun_trim($_POST['keywords'])) : null;
-		$author = (isset($_POST['author'])) ? utf8_strtolower(pun_trim($_POST['author'])) : null;
+		$keywords = ($params->get('keywords')) ? utf8_strtolower(pun_trim($params->get('keywords'))) : null;
+		$author = ($params->get('author')) ? utf8_strtolower(pun_trim($params->get('author'))) : null;
 
 		if (preg_match('%^[\*\%]+$%', $keywords) || (pun_strlen(str_replace(array('*', '%'), '', $keywords)) < PUN_SEARCH_MIN_WORD && !is_cjk($keywords)))
 			$keywords = '';
@@ -63,17 +60,17 @@ if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) ||
 		if ($author)
 			$author = str_replace('*', '%', $author);
 
-		$show_as = (isset($_POST['show_as']) && $_POST['show_as'] == 'topics') ? 'topics' : 'posts';
-		$sort_by = (isset($_POST['sort_by'])) ? intval($_POST['sort_by']) : 0;
-		$search_in = (!isset($_POST['search_in']) || $_POST['search_in'] == '0') ? 0 : (($_POST['search_in'] == '1') ? 1 : -1);
+		$show_as = ($params->get('show_as') && $params->get('show_as') == 'topics') ? 'topics' : 'posts';
+		$sort_by = ($params->get('sort_by')) ? intval($params->get('sort_by')) : 0;
+		$search_in = (!$params->get('search_in') || $params->get('search_in') == '0') ? 0 : (($params->get('search_in') == '1') ? 1 : -1);
 	}
 	// If it's a user search (by ID)
 	else if ($action == 'show_user_posts' || $action == 'show_user_topics' || $action == 'show_subscriptions')
 	{
-		if( isset($_POST['user_id']) )
-			$user_id = (isset($_POST['user_id'])) ? intval($_POST['user_id']) : $pun_user['id'];
+		if( $params->get('user_id') )
+			$user_id = ($params->get('user_id')) ? intval($params->get('user_id')) : $pun_user['id'];
 		else
-			$user_id = (isset($_GET['user_id'])) ? intval($_GET['user_id']) : $pun_user['id'];
+			$user_id = ($params->get('user_id')) ? intval($params->get('user_id')) : $pun_user['id'];
 		
 		if ($user_id < 2)
 			message($lang_common['Bad request'], false, '404 Not Found');
@@ -83,7 +80,7 @@ if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) ||
 			message($lang_common['No permission'], false, '403 Forbidden');
 	}
 	else if ($action == 'show_recent')
-		$interval = isset($_POST['value']) ? intval($_POST['value']) : 86400;
+		$interval = $params->get('value') ? intval($params->get('value')) : 86400;
 	else if ($action == 'show_replies')
 	{
 		if ($pun_user['is_guest'])
@@ -288,7 +285,7 @@ if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) ||
 			if ($author && $keywords)
 			{
 				$search_ids = array_intersect_assoc($keyword_results, $author_results);
-				$search_type = array('both', array($keywords, pun_trim($_POST['author'])), implode(',', $forums), $search_in);
+				$search_type = array('both', array($keywords, pun_trim($params->get('author'))), implode(',', $forums), $search_in);
 			}
 			else if ($keywords)
 			{
@@ -298,7 +295,7 @@ if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) ||
 			else
 			{
 				$search_ids = $author_results;
-				$search_type = array('author', pun_trim($_POST['author']), implode(',', $forums), $search_in);
+				$search_type = array('author', pun_trim($params->get('author')), implode(',', $forums), $search_in);
 			}
 
 			unset($keyword_results, $author_results);
@@ -328,7 +325,7 @@ if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) ||
 				if ($pun_user['is_guest'])
 					message($lang_common['No permission'], false, '403 Forbidden');
 
-				$result = $db->query('SELECT t.id FROM '.$db->prefix.'topics AS t LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=t.forum_id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND t.last_post>'.$pun_user['last_visit'].' AND t.moved_to IS NULL'.(isset($_POST['fid']) ? ' AND t.forum_id='.intval($_POST['fid']) : '').' ORDER BY t.last_post DESC') or error('Unable to fetch topic list', __FILE__, __LINE__, $db->error());
+				$result = $db->query('SELECT t.id FROM '.$db->prefix.'topics AS t LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=t.forum_id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND t.last_post>'.$pun_user['last_visit'].' AND t.moved_to IS NULL'.($params->get('fid') ? ' AND t.forum_id='.intval($params->get('fid')) : '').' ORDER BY t.last_post DESC') or error('Unable to fetch topic list', __FILE__, __LINE__, $db->error());
 				$num_hits = $db->num_rows($result);
 
 				if (!$num_hits)
@@ -337,7 +334,7 @@ if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) ||
 			// If it's a search for recent posts (in a certain time interval)
 			else if ($action == 'show_recent')
 			{
-				$result = $db->query('SELECT t.id FROM '.$db->prefix.'topics AS t LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=t.forum_id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND t.last_post>'.(time() - $interval).' AND t.moved_to IS NULL'.(isset($_POST['fid']) ? ' AND t.forum_id='.intval($_POST['fid']) : '').' ORDER BY t.last_post DESC') or error('Unable to fetch topic list', __FILE__, __LINE__, $db->error());
+				$result = $db->query('SELECT t.id FROM '.$db->prefix.'topics AS t LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=t.forum_id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND t.last_post>'.(time() - $interval).' AND t.moved_to IS NULL'.($params->get('fid') ? ' AND t.forum_id='.intval($params->get('fid')) : '').' ORDER BY t.last_post DESC') or error('Unable to fetch topic list', __FILE__, __LINE__, $db->error());
 				$num_hits = $db->num_rows($result);
 
 				if (!$num_hits)
@@ -479,11 +476,11 @@ if (isset($_POST['act']) || isset($_GET['act']) || isset($_POST['search_id']) ||
 				break;
 		}
 
-		// Determine the topic or post offset (based on $_GET['p'])
+		// Determine the topic or post offset (based on $params->get('p'))
 		$per_page = ($show_as == 'posts') ? $pun_user['disp_posts'] : $pun_user['disp_topics'];
 		$num_pages = ceil($num_hits / $per_page);
 
-		$p = (!isset($_GET['p']) || $_GET['p'] <= 1 || $_GET['p'] > $num_pages) ? 1 : intval($_GET['p']);
+		$p = (!$params->get('p') || $params->get('p') <= 1 || $params->get('p') > $num_pages) ? 1 : intval($params->get('p'));
 		$start_from = $per_page * ($p - 1);
 
 		// Generate paging links

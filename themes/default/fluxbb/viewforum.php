@@ -66,10 +66,10 @@ else
 if (!$pun_user['is_guest'])
 	$tracked_topics = get_tracked_topics();
 
-// Determine the topic offset (based on $_GET['p'])
+// Determine the topic offset (based on $params->get('p'))
 $num_pages = ceil($cur_forum['num_topics'] / $pun_user['disp_topics']);
 
-$p = (!isset($_GET['p']) || $_GET['p'] <= 1 || $_GET['p'] > $num_pages) ? 1 : intval($_GET['p']);
+$p = (!$params->get('p') || $params->get('p') <= 1 || $params->get('p') > $num_pages) ? 1 : intval($params->get('p'));
 $start_from = $pun_user['disp_topics'] * ($p - 1);
 
 // Generate paging links

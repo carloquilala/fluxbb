@@ -22,10 +22,10 @@ require PUN_ROOT.'lang/'.$pun_user['language'].'/search.php';
 // Determine if we are allowed to view post counts
 $show_post_count = ($pun_config['o_show_post_count'] == '1' || $pun_user['is_admmod']) ? true : false;
 
-$username = isset($_POST['username']) && $pun_user['g_search_users'] == '1' ? pun_trim($_POST['username']) : '';
-$show_group = isset($_POST['show_group']) ? intval($_POST['show_group']) : -1;
-$sort_by = isset($_POST['sort_by']) && (in_array($_POST['sort_by'], array('username', 'registered')) || ($_POST['sort_by'] == 'num_posts' && $show_post_count)) ? $_POST['sort_by'] : 'username';
-$sort_dir = isset($_POST['sort_dir']) && $_POST['sort_dir'] == 'DESC' ? 'DESC' : 'ASC';
+$username = $params->get('username') && $pun_user['g_search_users'] == '1' ? pun_trim($params->get('username')) : '';
+$show_group = $params->get('show_group') ? intval($params->get('show_group')) : -1;
+$sort_by = $params->get('sort_by') && (in_array($params->get('sort_by'), array('username', 'registered')) || ($params->get('sort_by') == 'num_posts' && $show_post_count)) ? $params->get('sort_by') : 'username';
+$sort_dir = $params->get('sort_dir') && $params->get('sort_dir') == 'DESC' ? 'DESC' : 'ASC';
 
 // Create any SQL for the WHERE clause
 $where_sql = array();
@@ -40,10 +40,10 @@ if ($show_group > -1)
 $result = $db->query('SELECT COUNT(id) FROM '.$db->prefix.'users AS u WHERE u.id>1 AND u.group_id!='.PUN_UNVERIFIED.(!empty($where_sql) ? ' AND '.implode(' AND ', $where_sql) : '')) or error('Unable to fetch user list count', __FILE__, __LINE__, $db->error());
 $num_users = $db->result($result);
 
-// Determine the user offset (based on $_POST['p'])
+// Determine the user offset (based on $params->get('p'))
 $num_pages = ceil($num_users / 50);
 
-$p = (!isset($_POST['p']) || $_POST['p'] <= 1 || $_POST['p'] > $num_pages) ? 1 : intval($_POST['p']);
+$p = (!$params->get('p')) || $params->get('p') <= 1 || $params->get('p') > $num_pages) ? 1 : intval($params->get('p'));
 $start_from = 50 * ($p - 1);
 
 $page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['User list']);

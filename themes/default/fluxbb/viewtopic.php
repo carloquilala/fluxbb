@@ -10,9 +10,9 @@ if (!file_exists('fluxbb/config.php')) {
 if ($pun_user['g_read_board'] == '0')
 	message($lang_common['No view'], false, '403 Forbidden');
 
-$action = isset($_GET['act']) ? $_GET['act'] : null;
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$pid = isset($_GET['pid']) ? intval($_GET['pid']) : 0;
+$action = $params->get('act') ? $params->get('act') : null;
+$id = $params->get('id') ? intval($params->get('id')) : 0;
+$pid = $params->get('pid') ? intval($params->get('pid')) : 0;
 if ($id < 1 && $pid < 1)
 	message($lang_common['Bad request'], false, '404 Not Found');
 
