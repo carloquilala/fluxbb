@@ -1,0 +1,410 @@
+Index: index.php
+===================================================================
+--- index.php	(revision 1114)
++++ index.php	(working copy)
+@@ -24,6 +24,7 @@
+ define('FLUX_THEME_DIR',  'themes');
+ define('FLUX_ADDON_DIR',  'addons');
+ define('FLUX_LANG_DIR',   'lang');
++define('PUN_ROOT',        'fluxbb/');
+ 
+ // Clean GPC arrays in the event magic_quotes_gpc is enabled.
+ if (ini_get('magic_quotes_gpc')) {
+@@ -54,6 +55,27 @@
+ // Vendor libraries.
+ require_once 'markdown/markdown.php';
+ 
++/* START FLUXBB INTEGRATION :: FLUXBB VARIABLES - JTQ */
++if (is_dir('fluxbb')) {
++	if ( file_exists('fluxbb/config.php') ) {
++		include 'addons/fluxbb/data/fluxbb/common.php';
++		include 'addons/fluxbb/data/fluxbb/common_admin.php';
++
++		$_COOKIE['punuser'] = $pun_user;
++		$_COOKIE['db'] = $db;
++		$_COOKIE['punconfig'] = $pun_config;
++		$_COOKIE['langcommon'] = $lang_common;
++		$_COOKIE['langprofile'] = $lang_profile;
++		$_COOKIE['langmisc'] = $lang_misc;
++		$_COOKIE['forum_time_formats'] = $forum_time_formats;
++		$_COOKIE['forum_date_formats'] = $forum_date_formats;
++		$_COOKIE['adminlanguage'] = $admin_language;
++		$_COOKIE['langadmincommon'] = $lang_admin_common;
++		$_COOKIE['punbans'] = $pun_bans;
++	}
++}
++/* END FLUXBB INTEGRATION :: FLUXBB VARIABLES - JTQ */
++
+ try {
+ 	if (!extension_loaded('pdo')) {
+ 		throw new Flux_Error('The PDO extension is required to use Flux, please make sure it is installed along with the PDO_MYSQL driver.');
+Index: modules/account/changemail.php
+===================================================================
+--- modules/account/changemail.php	(revision 1114)
++++ modules/account/changemail.php	(working copy)
+@@ -80,6 +80,12 @@
+ 				$res  = $sth->execute(array($code, $session->account->account_id, $old, $email, $ip, $ip));
+ 				
+ 				if ($res) {
++			
++					/* START FLUXBB INTEGRATION :: UPDATE EMAIL - JTQ */
++					$db = $_COOKIE['db'];
++					$db->query('UPDATE '.$db->prefix.'.users SET email = \''.$db->escape($email).'\' WHERE id='.$session->account->account_id) or error('FluxBB :: Unable to update user email', __FILE__, __LINE__, $db->error());
++					/* END FLUXBB INTEGRATION :: UPDATE EMAIL - JTQ */
++					
+ 					$session->setMessageData(Flux::message('EmailAddressChanged'));
+ 					$this->redirect();
+ 				}
+Index: modules/account/changepass.php
+===================================================================
+--- modules/account/changepass.php	(revision 1114)
++++ modules/account/changepass.php	(working copy)
+@@ -73,6 +73,26 @@
+ 			$sth = $server->connection->getStatement($sql);
+ 			
+ 			if ($sth->execute(array($newPassword, $session->account->account_id))) {
++			
++				/* START FLUXBB INTEGRATION :: UPDATE PASSWORD - JTQ */
++				
++				$db = $_COOKIE['db'];
++				$pun_config = $_COOKIE['punconfig'];
++
++				$result = $db->query('SELECT * FROM '.$db->prefix.'users WHERE id='.$session->account->account_id) 
++					or error('Unable to fetch password', __FILE__, __LINE__, $db->error());
++				$cur_user = $db->fetch_assoc($result);
++				
++				$new_password_hash = pun_hash($params->get('newpass'));
++				
++				$db->query('UPDATE '.$db->prefix.'.users SET password = \''.$new_password_hash.'\' WHERE id='.$session->account->account_id) 
++					or error('FluxBB :: Unable to update user password', __FILE__, __LINE__, $db->error());
++				
++				if ($cur_user['id'] == $session->account->account_id)
++					pun_setcookie($cur_user['id'], $new_password_hash, time() + $pun_config['o_timeout_visit']);
++				
++				/* END FLUXBB INTEGRATION :: UPDATE PASSWORD - JTQ */
++				
+ 				$pwChangeTable = Flux::config('FluxTables.ChangePasswordTable');
+ 				
+ 				$sql  = "INSERT INTO {$server->loginDatabase}.$pwChangeTable ";
+Index: modules/account/create.php
+===================================================================
+--- modules/account/create.php	(revision 1114)
++++ modules/account/create.php	(working copy)
+@@ -10,6 +10,19 @@
+ 
+ $serverNames = $this->getServerNames();
+ 
++/* START FLUXBB INTEGRATION :: INITIAL VARIABLES - JTQ */
++
++$pun_user = $_COOKIE['punuser'];
++$db = $_COOKIE['db'];
++$pun_config = $_COOKIE['punconfig'];
++$lang_common = $_COOKIE['langcommon'];
++$lang_misc = $_COOKIE['langmisc'];
++
++// Load the register.php/profile.php language file
++require PUN_ROOT.'lang/'.$pun_user['language'].'/prof_reg.php';
++
++/* END FLUXBB INTEGRATION :: INITIAL VARIABLES - JTQ */
++
+ if (count($_POST)) {
+ 	require_once 'Flux/RegisterError.php';
+ 	
+@@ -22,6 +35,12 @@
+ 		$gender    = $params->get('gender');
+ 		$birthdate = $params->get('birthdate_date');
+ 		$code      = $params->get('security_code');
++		/* START FLUXBB INTEGRATION :: FORM VARIABLES - JTQ */
++		$emailset  = $params->get('emailsetting');
++		$timezone  = $params->get('timezone');
++		$dst       = $params->get('dst');
++		$language  = $params->get('language');
++		/* END FLUXBB INTEGRATION :: FORM VARIABLES - JTQ */
+ 		
+ 		if (!($server = Flux::getServerGroupByName($server))) {
+ 			throw new Flux_RegisterError('Invalid server', Flux_RegisterError::INVALID_SERVER);
+@@ -31,6 +50,54 @@
+ 		$result = $server->loginServer->register($username, $password, $confirm, $email, $gender, $birthdate, $code);
+ 
+ 		if ($result) {
++			
++			/* START FLUXBB INTEGRATION :: FIX INFORMATIONS */
++
++			// Group ID
++			$intial_group_id = $pun_config['o_default_user_group'];
++			
++			// Password Hash
++			$password_hash = pun_hash($params->get('password'));
++
++			// Email Settings
++			$email_setting = intval($emailset);
++			if ($email_setting < 0 || $email_setting > 2)
++				$email_setting = $pun_config['o_default_email_setting'];
++
++			// Timezone and DST
++			$timezone = isset($timezone) ? round($timezone, 1) : 0;
++			$dst = isset($dst) ? '1' : '0';
++
++			// Make sure we got a valid language string
++			if (isset($langauge))
++			{
++				$language = preg_replace('%[\.\\\/]%', '', langauge);
++				if (!file_exists(PUN_ROOT.'lang/'.$language.'/common.php'))
++					message($lang_common['Bad request']);
++			}
++			else
++				$language = $pun_config['o_default_lang'];
++			
++			// Current Time
++			$now = time();
++				
++			/* END FLUXBB INTEGRATION :: FIX INFORMATIONS */
++				
++			/* START FLUXBB INTEGRATION :: INSERT FORUM USER ACCOUNT */
++
++			// Add the user
++			$db->query('INSERT INTO '.$db->prefix.'users (id, username, group_id, password, email, email_setting, timezone, dst, language, style, registered, registration_ip, last_visit) VALUES('.$result.', \''.$db->escape($username).'\', '.$intial_group_id.', \''.$password_hash.'\', \''.$db->escape($email1).'\', '.$email_setting.', '.$timezone.' , '.$dst.', \''.$db->escape($language).'\', \''.$pun_config['o_default_style'].'\', '.$now.', \''.$db->escape(get_remote_address()).'\', '.$now.')') or error('Unable to create user', __FILE__, __LINE__, $db->error());
++
++			// Regenerate the users info cache
++			if (!defined('FORUM_CACHE_FUNCTIONS_LOADED'))
++				require PUN_ROOT.'include/cache.php';
++
++			generate_users_info_cache();
++
++			pun_setcookie($result, $password_hash, time() + $pun_config['o_timeout_visit']);
++			
++			/* END FLUXBB INTEGRATION :: INSERT FORUM USER ACCOUNT */
++			
+ 			if (Flux::config('RequireEmailConfirm')) {
+ 				require_once 'Flux/Mailer.php';
+ 				
+Index: modules/account/edit.php
+===================================================================
+--- modules/account/edit.php	(revision 1114)
++++ modules/account/edit.php	(working copy)
+@@ -93,7 +93,12 @@
+ 			$sql .= " WHERE account_id = :account_id";
+ 			$sth  = $server->connection->getStatement($sql);
+ 			$sth->execute($bind);
+-
++			
++			/* START FLUXBB INTEGRATION :: EDIT ACCOUNT - JTQ */
++			$db = $_COOKIE['db'];
++			$db->query('UPDATE '.$db->prefix.'.users SET email = \''.$db->escape($email).'\' WHERE id='.$account->account_id) or error('Unable to update user email', __FILE__, __LINE__, $db->error());
++			/* END FLUXBB INTEGRATION :: EDIT ACCOUNT - JTQ */
++			
+ 			if ($auth->allowedToEditAccountBalance) {
+ 				$deposit = $balance - $account->balance;
+ 				$session->loginServer->depositCredits($account->account_id, $deposit);
+Index: modules/account/login.php
+===================================================================
+--- modules/account/login.php	(revision 1114)
++++ modules/account/login.php	(working copy)
+@@ -13,6 +13,7 @@
+ 	$server   = $params->get('server');
+ 	$username = $params->get('username');
+ 	$password = $params->get('password');
++	$password_forum = $params->get('password');
+ 	$code     = $params->get('security_code');
+ 	
+ 	try {
+@@ -22,7 +23,77 @@
+ 		if ($session->loginAthenaGroup->loginServer->config->getUseMD5()) {
+ 			$password = Flux::hashPassword($password);
+ 		}
++
++		/* START FLUXBB INTEGRATION :: LOGIN - JTQ */
+ 		
++		if ( file_exists('fluxbb/config.php') ) {
++			$pun_user = $_COOKIE['punuser'];
++			$db = $_COOKIE['db'];
++			$pun_config = $_COOKIE['punconfig'];
++			$lang_common = $_COOKIE['langcommon'];
++			$lang_misc = $_COOKIE['langmisc'];
++			
++			$username_sql = ($db_type == 'mysql' || $db_type == 'mysqli' || $db_type == 'mysql_innodb' || $db_type == 'mysqli_innodb') ? 'username=\''.$db->escape($username).'\'' : 'LOWER(username)=LOWER(\''.$db->escape($username).'\')';
++
++			$result = $db->query('SELECT * FROM '.$db->prefix.'users WHERE '.$username_sql) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
++			$cur_user = $db->fetch_assoc($result);
++
++			$authorized = false;
++
++			if (!empty($cur_user['password']))
++			{
++				$form_password_hash = pun_hash($password_forum); // Will result in a SHA-1 hash
++
++				// If there is a salt in the database we have upgraded from 1.3-legacy though haven't yet logged in
++				if (!empty($cur_user['salt']))
++				{
++					if (sha1($cur_user['salt'].sha1($password_forum)) == $cur_user['password']) // 1.3 used sha1(salt.sha1(pass))
++					{
++						$authorized = true;
++
++						$db->query('UPDATE '.$db->prefix.'users SET password=\''.$form_password_hash.'\', salt=NULL WHERE id='.$cur_user['id']) or error('Unable to update user password', __FILE__, __LINE__, $db->error());
++					}
++				}
++				// If the length isn't 40 then the password isn't using sha1, so it must be md5 from 1.2
++				else if (strlen($cur_user['password']) != 40)
++				{
++					if (md5($password_forum) == $cur_user['password'])
++					{
++						$authorized = true;
++
++						$db->query('UPDATE '.$db->prefix.'users SET password=\''.$form_password_hash.'\' WHERE id='.$cur_user['id']) or error('Unable to update user password', __FILE__, __LINE__, $db->error());
++					}
++				}
++				// Otherwise we should have a normal sha1 password
++				else
++					$authorized = ($cur_user['password'] == $form_password_hash);
++			}
++
++			// Update the status if this is the first time the user logged in
++			if ($cur_user['group_id'] == PUN_UNVERIFIED)
++			{
++				$db->query('UPDATE '.$db->prefix.'users SET group_id='.$pun_config['o_default_user_group'].' WHERE id='.$cur_user['id']) or error('Unable to update user status', __FILE__, __LINE__, $db->error());
++
++				// Regenerate the users info cache
++				if (!defined('FORUM_CACHE_FUNCTIONS_LOADED'))
++					require PUN_ROOT.'include/cache.php';
++
++				generate_users_info_cache();
++			}
++
++			// Remove this user's guest entry from the online list
++			$db->query('DELETE FROM '.$db->prefix.'online WHERE ident=\''.$db->escape(get_remote_address()).'\'') or error('Unable to delete from online list', __FILE__, __LINE__, $db->error());
++
++			// $expire = time() + 1209600;
++			$expire = time() + (Flux::config('SessionCookieExpire') * 60 * 60);
++			pun_setcookie($cur_user['id'], $form_password_hash, $expire);
++
++			// Reset tracked topics
++			set_tracked_topics(null);
++		}
++		
++		/* END FLUXBB INTEGRATION :: LOGIN - JTQ */
++		
+ 		$sql  = "INSERT INTO {$session->loginAthenaGroup->loginDatabase}.$loginLogTable ";
+ 		$sql .= "(account_id, username, password, ip, error_code, login_date) ";
+ 		$sql .= "VALUES (?, ?, ?, ?, ?, NOW())";
+Index: modules/account/logout.php
+===================================================================
+--- modules/account/logout.php	(revision 1114)
++++ modules/account/logout.php	(working copy)
+@@ -4,5 +4,24 @@
+ $title = Flux::message('LogoutTitle');
+ 
+ $session->logout();
++
++/* END FLUXBB INTEGRATION :: LOGOUT - JTQ */
++
++if ( file_exists('fluxbb/config.php') ) {
++	$pun_user = $_COOKIE['punuser'];
++	$db = $_COOKIE['db'];
++
++	// Remove user from "users online" list
++	$db->query('DELETE FROM '.$db->prefix.'online WHERE user_id='.$pun_user['id']) or error('Unable to delete from online list', __FILE__, __LINE__, $db->error());
++
++	// Update last_visit (make sure there's something to update it with)
++	if (isset($pun_user['logged']))
++		$db->query('UPDATE '.$db->prefix.'users SET last_visit='.$pun_user['logged'].' WHERE id='.$pun_user['id']) or error('Unable to update user visit data', __FILE__, __LINE__, $db->error());
++
++	pun_setcookie(1, pun_hash(uniqid(rand(), true)), time() + 31536000);
++}
++		
++/* END FLUXBB INTEGRATION :: LOGOUT - JTQ */
++
+ $metaRefresh = array('seconds' => 2, 'location' => $this->basePath);
+ ?>
+\ No newline at end of file
+Index: modules/account/resetpw.php
+===================================================================
+--- modules/account/resetpw.php	(revision 1114)
++++ modules/account/resetpw.php	(working copy)
+@@ -76,6 +76,11 @@
+ else {
+ 	$message = Flux::message('ResetPwDone2');
+ }
++			
++/* START FLUXBB INTEGRATION :: UPDATE PASSWORD - JTQ */
++$db = $_COOKIE['db'];
++$db->query('UPDATE '.$db->prefix.'.users SET password = \''.pun_hash($unhashedNewPassword).'\' WHERE id='.$account) or error('FluxBB :: Unable to update user password', __FILE__, __LINE__, $db->error());
++/* END FLUXBB INTEGRATION :: UPDATE PASSWORD - JTQ */
+ 
+ $session->setMessageData($message);
+ $this->redirect();
+Index: themes/default/account/create.php
+===================================================================
+--- themes/default/account/create.php	(revision 1114)
++++ themes/default/account/create.php	(working copy)
+@@ -76,6 +76,71 @@
+ 			<th><label><?php echo htmlspecialchars(Flux::message('AccountBirthdateLabel')) ?></label></th>
+ 			<td><?php echo $this->dateField('birthdate',null,0) ?></td>
+ 		</tr>
++		<!-- START FLUXBB INTEGRATION :: CREATE - JTQ -->
++		<?php
++			$timezone = isset($timezone) ? $timezone : $pun_config['o_default_timezone'];
++			$dst = isset($dst) ? $dst : $pun_config['o_default_dst'];
++			$email_setting = isset($email_setting) ? $email_setting : $pun_config['o_default_email_setting'];
++		?>
++		<tr>
++			<th><label>Time Zone</label></th>
++			<td>
++				<select id="time_zone" name="timezone">
++					<option value="-12"<?php if ($timezone == -12) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-12:00'] ?></option>
++					<option value="-11"<?php if ($timezone == -11) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-11:00'] ?></option>
++					<option value="-10"<?php if ($timezone == -10) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-10:00'] ?></option>
++					<option value="-9.5"<?php if ($timezone == -9.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-09:30'] ?></option>
++					<option value="-9"<?php if ($timezone == -9) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-09:00'] ?></option>
++					<option value="-8.5"<?php if ($timezone == -8.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-08:30'] ?></option>
++					<option value="-8"<?php if ($timezone == -8) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-08:00'] ?></option>
++					<option value="-7"<?php if ($timezone == -7) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-07:00'] ?></option>
++					<option value="-6"<?php if ($timezone == -6) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-06:00'] ?></option>
++					<option value="-5"<?php if ($timezone == -5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-05:00'] ?></option>
++					<option value="-4"<?php if ($timezone == -4) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-04:00'] ?></option>
++					<option value="-3.5"<?php if ($timezone == -3.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-03:30'] ?></option>
++					<option value="-3"<?php if ($timezone == -3) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-03:00'] ?></option>
++					<option value="-2"<?php if ($timezone == -2) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-02:00'] ?></option>
++					<option value="-1"<?php if ($timezone == -1) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC-01:00'] ?></option>
++					<option value="0"<?php if ($timezone == 0) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC'] ?></option>
++					<option value="1"<?php if ($timezone == 1) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+01:00'] ?></option>
++					<option value="2"<?php if ($timezone == 2) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+02:00'] ?></option>
++					<option value="3"<?php if ($timezone == 3) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+03:00'] ?></option>
++					<option value="3.5"<?php if ($timezone == 3.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+03:30'] ?></option>
++					<option value="4"<?php if ($timezone == 4) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+04:00'] ?></option>
++					<option value="4.5"<?php if ($timezone == 4.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+04:30'] ?></option>
++					<option value="5"<?php if ($timezone == 5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+05:00'] ?></option>
++					<option value="5.5"<?php if ($timezone == 5.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+05:30'] ?></option>
++					<option value="5.75"<?php if ($timezone == 5.75) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+05:45'] ?></option>
++					<option value="6"<?php if ($timezone == 6) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+06:00'] ?></option>
++					<option value="6.5"<?php if ($timezone == 6.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+06:30'] ?></option>
++					<option value="7"<?php if ($timezone == 7) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+07:00'] ?></option>
++					<option value="8"<?php if ($timezone == 8) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+08:00'] ?></option>
++					<option value="8.75"<?php if ($timezone == 8.75) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+08:45'] ?></option>
++					<option value="9"<?php if ($timezone == 9) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+09:00'] ?></option>
++					<option value="9.5"<?php if ($timezone == 9.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+09:30'] ?></option>
++					<option value="10"<?php if ($timezone == 10) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+10:00'] ?></option>
++					<option value="10.5"<?php if ($timezone == 10.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+10:30'] ?></option>
++					<option value="11"<?php if ($timezone == 11) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+11:00'] ?></option>
++					<option value="11.5"<?php if ($timezone == 11.5) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+11:30'] ?></option>
++					<option value="12"<?php if ($timezone == 12) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+12:00'] ?></option>
++					<option value="12.75"<?php if ($timezone == 12.75) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+12:45'] ?></option>
++					<option value="13"<?php if ($timezone == 13) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+13:00'] ?></option>
++					<option value="14"<?php if ($timezone == 14) echo ' selected="selected"' ?>><?php echo $lang_prof_reg['UTC+14:00'] ?></option>
++				</select>
++				<br>
++				<label><input type="checkbox" name="dst" value="1"<?php if ($dst == '1') echo ' checked="checked"' ?> /><?php echo $lang_prof_reg['DST'] ?></label>
++			</td>
++		</tr>
++		<tr>
++			<th><label><?php echo $lang_prof_reg['Privacy options legend'] ?></label></th>
++			<td>
++				<p><?php echo $lang_prof_reg['Email setting info'] ?></p>
++				<label><input type="radio" name="emailsetting" value="0"<?php if ($email_setting == '0') echo ' checked="checked"' ?> /><?php echo $lang_prof_reg['Email setting 1'] ?><br /></label>
++				<label><input type="radio" name="emailsetting" value="1"<?php if ($email_setting == '1') echo ' checked="checked"' ?> /><?php echo $lang_prof_reg['Email setting 2'] ?><br /></label>
++				<label><input type="radio" name="emailsetting" value="2"<?php if ($email_setting == '2') echo ' checked="checked"' ?> /><?php echo $lang_prof_reg['Email setting 3'] ?><br /></label>
++			</td>
++		</tr>
++		<!-- END FLUXBB INTEGRATION :: CREATE - JTQ -->
+ 		
+ 		<?php if (Flux::config('UseCaptcha')): ?>
+ 		<tr>
