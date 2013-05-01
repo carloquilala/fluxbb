@@ -43,7 +43,7 @@ $num_users = $db->result($result);
 // Determine the user offset (based on $params->get('p'))
 $num_pages = ceil($num_users / 50);
 
-$p = (!$params->get('p')) || $params->get('p') <= 1 || $params->get('p') > $num_pages) ? 1 : intval($params->get('p'));
+$p = (!$params->get('p') || $params->get('p') <= 1 || $params->get('p') > $num_pages) ? 1 : intval($params->get('p'));
 $start_from = 50 * ($p - 1);
 
 $page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_common['User list']);
