@@ -1556,12 +1556,12 @@ else
 		if( strtolower($account->sex) != 's' ) 
 		{
 			$xpassword = $useMD5 ? Flux::hashPassword($account->user_pass) : $account->user_pass;
-			$db->query('INSERT INTO '.$db_prefix.'users (id, group_id, username, password, email, language, style, num_posts, last_post, registered, registration_ip, last_visit) VALUES('.$account->account_id.', 4, \''.$db->escape($account->userid).'\', \''.pun_hash($xpassword).'\', \''.$account->email.'\', \''.$db->escape($default_lang).'\', \''.$db->escape($default_style).'\', 1, '.$now.', '.$now.', \''.$db->escape(get_remote_address()).'\', '.$now.')')
+			$db->query('INSERT INTO '.$db_prefix.'users (id, group_id, username, password, email, language, style, num_posts, last_post, registered, registration_ip, last_visit) VALUES('.$account->account_id.', 4, \''.$db->escape($account->userid).'\', \''.pun_hash($xpassword).'\', \''.$account->email.'\', \''.$db->escape($default_lang).'\', \''.$db->escape($default_style).'\', 0, 0, '.$now.', \''.$db->escape(get_remote_address()).'\', 0)')
 				or error('Unable to add administrator user. Please check your configuration and try again', __FILE__, __LINE__, $db->error());
 		}
 	}
 
-	$db->query('UPDATE '.$db_name.'.'.$db_prefix.'users SET group_id = 1 WHERE username = \''.$db->escape($username).'\'')
+	$db->query('UPDATE '.$db_name.'.'.$db_prefix.'users SET group_id = 1, num_posts = 1, last_post = '.$now.', last_visit = '.$now.' WHERE username = \''.$db->escape($username).'\'')
 		or error('Unable to set administrator\'s group id', __FILE__, __LINE__, $db->error());
 
 	$sth->execute(array($username));
