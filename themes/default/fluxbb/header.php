@@ -199,8 +199,8 @@ if ($pun_user['g_read_board'] == '1' && $pun_user['g_search'] == '1')
 
 if ($pun_user['is_guest'])
 {
-	$links[] = '<li id="navregister"'.((PUN_ACTIVE_PAGE == 'register') ? ' class="isactive"' : '').'><a href="/fluxcp/trunk/?module=account&action=create">'.$lang_common['Register'].'</a></li>';
-	$links[] = '<li id="navlogin"'.((PUN_ACTIVE_PAGE == 'login') ? ' class="isactive"' : '').'><a href="/fluxcp/trunk/?module=account&action=login">'.$lang_common['Login'].'</a></li>';
+	$links[] = '<li id="navregister"'.((PUN_ACTIVE_PAGE == 'register') ? ' class="isactive"' : '').'><a href="?module=account&action=create">'.$lang_common['Register'].'</a></li>';
+	$links[] = '<li id="navlogin"'.((PUN_ACTIVE_PAGE == 'login') ? ' class="isactive"' : '').'><a href="?module=account&action=login">'.$lang_common['Login'].'</a></li>';
 }
 else
 {
@@ -209,7 +209,7 @@ else
 	if ($pun_user['is_admmod'])
 		$links[] = '<li id="navadmin"'.((PUN_ACTIVE_PAGE == 'admin') ? ' class="isactive"' : '').'><a href="?module=fluxbb&action=admin_index">'.$lang_common['Admin'].'</a></li>';
 
-	$links[] = '<li id="navlogout"><a href="/fluxcp/trunk/?module=account&action=logout" onclick="return confirm(\'Are you sure you want to logout?\')">'.$lang_common['Logout'].'</a></li>';
+	$links[] = '<li id="navlogout"><a href="?module=account&action=logout" onclick="return confirm(\'Are you sure you want to logout?\')">'.$lang_common['Logout'].'</a></li>';
 }
 
 // Are there any additional navlinks we should insert into the array before imploding it?
