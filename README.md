@@ -8,30 +8,11 @@ For more features and what is supports in detail, you may found it at http://flu
 
 ## How to install
 
-**Essential Files**
-  * FluxCP - https://github.com/missxantara/fluxcp-ra/trunk/
-  * FluxBB Addon - https://github.com/jupeto/fluxbb.git or SVN Checkout https://github.com/jupeto/fluxbb/trunk
-  * FluxBB version 1.5.3 (zip) - http://fluxbb.org/downloads/
+Please go to http://artworx.juplo.com/?module=fluxbb&action=howto#install
 
-**Minimum Requirement - FluxBB version 1.5.3 (zip)**
-  * To install and run FluxBB v1.5.3 you must have access to a webserver. FluxBB v1.5.3 requires PHP 4.4.0 or later. A database is required which may be MySQL 4.1.2 or later, PostgreSQL 7.0 or later or SQLite 2.
-
-**Uploading, Installation, and Configuration**
-  - Upload downloaded FluxBB version 1.5.3 (zip) in ``<%FLUXCP_DIR%>/`` folder (Do not install yet)
-  - Open **FluxCP_Root/addons** and create a new folder and name it as **fluxbb** then upload/extract the downloaded FluxBB Addon files, or if you are using a svn, checkout the latest build in this link https://github.com/jupeto/fluxbb/trunk/
-  - Create a database and name it as fluxbb
-  - Access the install path of FluxCP Addon via http://domain.com/fluxcp_folder/index.php?module=fluxbb&action=install or http://domain.com/index.php?module=fluxbb&action=install
-  - Fill in all required fields and submit the form to install it
-  - You must specify a valid admin username to be an administrator
-  - During the installation, all FluxCP accounts will be inserted in FluxBB account table
-  - If you want to integrate both FluxCP and FluxBB account sessions, see http://artworx.juplo.com/?module=fluxbb&action=howto before logging in
-  - After successfull installation, re-login using your admin account. Have fun using FluxBB Forum
-
-If you need further support in installing the addon, please feel free to post your questions in http://artworx.juplo.com/?module=fluxbb
-  
 ## Integrating FluxCP and FluxBB account sessions
 
-You may find the step by step procedure on how to integrate FluxBB with FluxCP at http://artworx.juplo.com/?module=fluxbb&action=howto
+You may find the step by step procedure on how to integrate FluxBB with FluxCP at http://artworx.juplo.com/?module=fluxbb&action=howto#integrate_home
 
 ## Copyright License
 
